@@ -1,0 +1,223 @@
+// 全局样式 - 科技风主题
+@import './variables.scss';
+
+// ========== CSS 变量 (供 Element Plus 覆写) ==========
+:root {
+  // 背景
+  --el-bg-color: #{$bg-secondary};
+  --el-bg-color-overlay: #{$bg-tertiary};
+  --el-bg-color-page: #{$bg-primary};
+
+  // 文字
+  --el-text-color-primary: #{$text-primary};
+  --el-text-color-regular: #{$text-secondary};
+  --el-text-color-disabled: #{$text-disabled};
+
+  // 边框
+  --el-border-color: #{$border-color};
+  --el-border-color-light: #{$tech-blue-dim};
+  --el-border-radius-base: #{$border-radius};
+
+  // 主题色
+  --el-color-primary: #{$tech-blue};
+  --el-color-primary-light-3: #{lighten($tech-blue, 15%)};
+  --el-color-primary-light-5: #{lighten($tech-blue, 25%)};
+  --el-color-primary-dark-2: #{darken($tech-blue, 15%)};
+
+  // 功能色
+  --el-color-success: #{$status-green};
+  --el-color-warning: #{$status-orange};
+  --el-color-danger: #{$status-red};
+
+  // 字体
+  --font-mono: #{$font-mono};
+  --font-sans: #{$font-sans};
+}
+
+// ========== 全局重置 ==========
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: $font-sans;
+  font-size: 14px;
+  color: $text-primary;
+  background-color: $bg-primary;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#app {
+  width: 100%;
+  height: 100%;
+}
+
+// ========== 链接 ==========
+a {
+  color: $tech-blue;
+  text-decoration: none;
+  transition: color $transition-fast;
+
+  &:hover {
+    color: $tech-cyan;
+  }
+}
+
+// ========== 滚动条样式 ==========
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: $bg-primary;
+}
+
+::-webkit-scrollbar-thumb {
+  background: $tech-blue-dim;
+  border-radius: 3px;
+
+  &:hover {
+    background: $tech-blue;
+  }
+}
+
+// ========== 网格线背景 ==========
+.bg-grid {
+  background-image:
+    linear-gradient(rgba(0, 212, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 212, 255, 0.03) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+// ========== Element Plus 覆写 ==========
+
+// 按钮
+.el-button {
+  font-family: $font-mono;
+  border-radius: $border-radius;
+  transition: all $transition-fast;
+
+  &--primary {
+    background-color: $tech-blue;
+    border-color: $tech-blue;
+
+    &:hover,
+    &:focus {
+      background-color: lighten($tech-blue, 10%);
+      border-color: lighten($tech-blue, 10%);
+      box-shadow: $shadow-glow;
+    }
+  }
+
+  &--default {
+    background-color: transparent;
+    border-color: $border-color;
+    color: $text-primary;
+
+    &:hover,
+    &:focus {
+      border-color: $tech-blue;
+      color: $tech-blue;
+    }
+  }
+}
+
+// 输入框
+.el-input {
+  &__wrapper {
+    background-color: $bg-primary;
+    border: 1px solid $border-color;
+    box-shadow: none;
+
+    &:hover,
+    &.is-focus {
+      border-color: $tech-blue;
+      box-shadow: $shadow-glow;
+    }
+  }
+
+  &__inner {
+    color: $text-primary;
+    font-family: $font-mono;
+
+    &::placeholder {
+      color: $text-disabled;
+    }
+  }
+}
+
+// 表格
+.el-table {
+  background-color: transparent;
+  color: $text-primary;
+
+  th.el-table__cell {
+    background-color: $bg-tertiary;
+    color: $text-secondary;
+    border-bottom-color: $border-color;
+  }
+
+  td.el-table__cell {
+    border-bottom-color: rgba($border-color, 0.5);
+  }
+
+  tr {
+    background-color: transparent;
+
+    &:hover > td.el-table__cell {
+      background-color: $bg-tertiary;
+    }
+  }
+
+  &__row--striped td.el-table__cell {
+    background-color: rgba($bg-tertiary, 0.5);
+  }
+}
+
+// 卡片
+.el-card {
+  background-color: $bg-overlay;
+  border: 1px solid $border-color;
+  border-radius: $border-radius;
+  backdrop-filter: blur(10px);
+  transition: border-color $transition-fast;
+
+  &:hover {
+    border-color: $tech-blue;
+  }
+}
+
+// 对话框
+.el-dialog {
+  background-color: $bg-secondary;
+  border: 1px solid $border-color;
+
+  &__header {
+    border-bottom: 1px solid $border-color;
+  }
+
+  &__title {
+    color: $text-primary;
+  }
+}
+
+// 消息提示
+.el-message {
+  background-color: $bg-secondary;
+  border: 1px solid $border-color;
+}
+
+// 标签
+.el-tag {
+  border-radius: $border-radius;
+}

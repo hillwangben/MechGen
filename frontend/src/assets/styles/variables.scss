@@ -1,0 +1,60 @@
+// 科技风主题变量 - 反无技战法生成模块
+
+// ========== 暗色基底 (主背景) ==========
+$bg-primary: #0a0e27;       // 深空蓝黑
+$bg-secondary: #111633;     // 卡片/面板背景
+$bg-tertiary: #1a1f3f;      // 悬浮态背景
+$bg-overlay: rgba(17, 22, 51, 0.85);  // 半透明背景
+
+// ========== 科技蓝系 (主色调) ==========
+$tech-blue: #00d4ff;        // 高亮蓝 (强调/选中)
+$tech-blue-dim: #006680;    // 弱化蓝 (边框/分割)
+$tech-cyan: #00f0ff;        // 荧光青 (数据高亮)
+
+// ========== 功能色 ==========
+$status-green: #00ff88;     // 成功/就绪
+$status-orange: #ff8c00;    // 警告/进行中
+$status-red: #ff3860;       // 错误/失败
+$status-purple: #b366ff;    // 碰撞/特殊状态
+
+// ========== 文字色 ==========
+$text-primary: #e0e6ff;     // 主文字
+$text-secondary: #8890b5;   // 次要文字
+$text-disabled: #4a5080;    // 禁用文字
+
+// ========== 间距系统 ==========
+$spacing-xs: 4px;
+$spacing-sm: 8px;
+$spacing-md: 16px;
+$spacing-lg: 24px;
+$spacing-xl: 32px;
+
+// ========== 布局尺寸 ==========
+$topbar-height: 48px;
+$sidenav-width: 60px;
+$chat-panel-width: 380px;
+$statusbar-height: 32px;
+
+// ========== 字体 ==========
+$font-mono: "JetBrains Mono", "Fira Code", "Courier New", monospace;
+$font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+// ========== 边框 ==========
+$border-color: $tech-blue-dim;
+$border-color-hover: $tech-blue;
+$border-radius: 2px;
+
+// ========== 阴影 ==========
+$shadow-glow: 0 0 10px rgba(0, 212, 255, 0.3);
+$shadow-glow-strong: 0 0 20px rgba(0, 212, 255, 0.5);
+
+// ========== 过渡 ==========
+$transition-fast: 150ms ease;
+$transition-normal: 200ms ease;
+$transition-slow: 300ms ease;
+
+// ========== 断点 ==========
+$breakpoint-sm: 576px;
+$breakpoint-md: 768px;
+$breakpoint-lg: 992px;
+$breakpoint-xl: 1200px;
