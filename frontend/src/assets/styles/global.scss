@@ -1,5 +1,6 @@
-// 全局样式 - 科技风主题
+// 全局样式 - 赛博朋克风格主题
 @import './variables.scss';
+@import './mixins.scss';
 
 // ========== CSS 变量 (供 Element Plus 覆写) ==========
 :root {
@@ -15,21 +16,22 @@
 
   // 边框
   --el-border-color: #{$border-color};
-  --el-border-color-light: #{$tech-blue-dim};
-  --el-border-radius-base: #{$border-radius};
+  --el-border-color-light: #{$neon-cyan-dim};
+  --el-border-radius-base: 0;  // 直角更符合赛博朋克
 
   // 主题色
-  --el-color-primary: #{$tech-blue};
-  --el-color-primary-light-3: #{lighten($tech-blue, 15%)};
-  --el-color-primary-light-5: #{lighten($tech-blue, 25%)};
-  --el-color-primary-dark-2: #{darken($tech-blue, 15%)};
+  --el-color-primary: #{$neon-cyan};
+  --el-color-primary-light-3: #{lighten($neon-cyan, 15%)};
+  --el-color-primary-light-5: #{lighten($neon-cyan, 25%)};
+  --el-color-primary-dark-2: #{darken($neon-cyan, 15%)};
 
   // 功能色
   --el-color-success: #{$status-green};
-  --el-color-warning: #{$status-orange};
+  --el-color-warning: #{$neon-magenta};
   --el-color-danger: #{$status-red};
 
   // 字体
+  --font-serif: #{$font-serif};
   --font-mono: #{$font-mono};
   --font-sans: #{$font-sans};
 }
@@ -63,7 +65,7 @@ body {
 
 // ========== 链接 ==========
 a {
-  color: $tech-blue;
+  color: $neon-cyan;
   text-decoration: none;
   transition: color $transition-fast;
 
@@ -83,51 +85,57 @@ a {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: $tech-blue-dim;
+  background: $neon-cyan-dim;
   border-radius: 3px;
 
   &:hover {
-    background: $tech-blue;
+    background: $neon-cyan;
   }
 }
 
 // ========== 网格线背景 ==========
 .bg-grid {
   background-image:
-    linear-gradient(rgba(0, 212, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 212, 255, 0.03) 1px, transparent 1px);
-  background-size: 20px 20px;
+    linear-gradient(rgba(0, 255, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 255, 255, 0.05) 1px, transparent 1px);
+  background-size: 25px 25px;
 }
 
 // ========== Element Plus 覆写 ==========
 
 // 按钮
 .el-button {
-  font-family: $font-mono;
-  border-radius: $border-radius;
+  font-family: $font-serif;
+  border-radius: 0;  // 直角
   transition: all $transition-fast;
 
   &--primary {
-    background-color: $tech-blue;
-    border-color: $tech-blue;
+    @include neon-button($neon-cyan);
+  }
 
-    &:hover,
-    &:focus {
-      background-color: lighten($tech-blue, 10%);
-      border-color: lighten($tech-blue, 10%);
-      box-shadow: $shadow-glow;
-    }
+  &--success {
+    @include neon-button($status-green);
+  }
+
+  &--warning {
+    @include neon-button($neon-magenta);
+  }
+
+  &--danger {
+    @include neon-button($status-red);
   }
 
   &--default {
-    background-color: transparent;
-    border-color: $border-color;
+    font-family: $font-serif;
+    background: transparent;
+    border: 1px solid $border-color;
     color: $text-primary;
 
     &:hover,
     &:focus {
-      border-color: $tech-blue;
-      color: $tech-blue;
+      border-color: $neon-cyan;
+      color: $neon-cyan;
+      box-shadow: 0 0 10px rgba($neon-cyan, 0.3);
     }
   }
 }
@@ -135,23 +143,42 @@ a {
 // 输入框
 .el-input {
   &__wrapper {
-    background-color: $bg-primary;
-    border: 1px solid $border-color;
-    box-shadow: none;
+    background-color: rgba(0, 20, 40, 0.6);
+    border: 1px solid $neon-cyan-dim;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3);
+    border-radius: 0;
 
     &:hover,
     &.is-focus {
-      border-color: $tech-blue;
-      box-shadow: $shadow-glow;
+      border-color: $neon-cyan;
+      box-shadow:
+        0 0 15px rgba($neon-cyan, 0.3),
+        inset 0 0 10px rgba(0, 0, 0, 0.3);
     }
   }
 
   &__inner {
+    font-family: $font-sans;
     color: $text-primary;
-    font-family: $font-mono;
 
     &::placeholder {
       color: $text-disabled;
+    }
+  }
+}
+
+// 文本域
+.el-textarea {
+  &__inner {
+    font-family: $font-sans;
+    background-color: rgba(0, 20, 40, 0.6);
+    border: 1px solid $neon-cyan-dim;
+    border-radius: 0;
+    color: $text-primary;
+
+    &:focus {
+      border-color: $neon-cyan;
+      box-shadow: 0 0 15px rgba($neon-cyan, 0.3);
     }
   }
 }
@@ -162,12 +189,15 @@ a {
   color: $text-primary;
 
   th.el-table__cell {
-    background-color: $bg-tertiary;
-    color: $text-secondary;
+    font-family: $font-serif;
+    background-color: rgba(0, 168, 181, 0.15);
+    color: $neon-cyan;
+    text-shadow: 0 0 5px rgba($neon-cyan, 0.4);
     border-bottom-color: $border-color;
   }
 
   td.el-table__cell {
+    font-family: $font-sans;
     border-bottom-color: rgba($border-color, 0.5);
   }
 
@@ -186,38 +216,112 @@ a {
 
 // 卡片
 .el-card {
-  background-color: $bg-overlay;
-  border: 1px solid $border-color;
-  border-radius: $border-radius;
-  backdrop-filter: blur(10px);
-  transition: border-color $transition-fast;
+  background: $bg-overlay;
+  @include neon-border($neon-cyan-dim);
+  backdrop-filter: blur(12px);
+  transition: all $transition-fast;
 
   &:hover {
-    border-color: $tech-blue;
+    @include neon-border($neon-cyan);
+  }
+
+  &__header {
+    font-family: $font-serif;
+    font-size: $font-size-lg;
+    @include neon-text($neon-cyan);
+    border-bottom: 1px solid $border-color;
+    padding: $spacing-md;
+  }
+
+  &__body {
+    font-family: $font-sans;
   }
 }
 
 // 对话框
 .el-dialog {
   background-color: $bg-secondary;
-  border: 1px solid $border-color;
+  border: 1px solid $neon-cyan-dim;
+  @include neon-border($neon-cyan-dim);
+  border-radius: 0;
 
   &__header {
+    font-family: $font-serif;
     border-bottom: 1px solid $border-color;
   }
 
   &__title {
-    color: $text-primary;
+    @include neon-text($neon-cyan);
+  }
+
+  &__body {
+    font-family: $font-sans;
   }
 }
 
 // 消息提示
 .el-message {
   background-color: $bg-secondary;
-  border: 1px solid $border-color;
+  border: 1px solid $neon-cyan-dim;
+  border-radius: 0;
+  @include neon-border($neon-cyan-dim);
+}
+
+// 通知
+.el-notification {
+  background-color: $bg-secondary;
+  border: 1px solid $neon-cyan-dim;
+  border-radius: 0;
 }
 
 // 标签
 .el-tag {
-  border-radius: $border-radius;
+  font-family: $font-serif;
+  border-radius: 0;  // 直角
+
+  &--success {
+    background: rgba($status-green, 0.15);
+    border-color: $status-green;
+    color: $status-green;
+    text-shadow: 0 0 8px rgba($status-green, 0.5);
+  }
+
+  &--warning {
+    background: rgba($neon-magenta, 0.15);
+    border-color: $neon-magenta;
+    color: $neon-magenta;
+    text-shadow: 0 0 8px rgba($neon-magenta, 0.5);
+  }
+
+  &--danger {
+    background: rgba($status-red, 0.15);
+    border-color: $status-red;
+    color: $status-red;
+    text-shadow: 0 0 8px rgba($status-red, 0.5);
+  }
+
+  &--info {
+    background: rgba($neon-cyan, 0.15);
+    border-color: $neon-cyan-dim;
+    color: $neon-cyan;
+    text-shadow: 0 0 8px rgba($neon-cyan, 0.5);
+  }
+}
+
+// 下拉菜单
+.el-dropdown-menu {
+  background-color: $bg-secondary;
+  border: 1px solid $neon-cyan-dim;
+  border-radius: 0;
+  @include neon-border($neon-cyan-dim);
+
+  &__item {
+    font-family: $font-sans;
+    color: $text-primary;
+
+    &:hover {
+      background-color: $bg-tertiary;
+      color: $neon-cyan;
+    }
+  }
 }

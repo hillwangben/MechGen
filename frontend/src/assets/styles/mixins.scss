@@ -168,3 +168,89 @@
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
 }
+
+// ========== 霓虹边框效果 ==========
+// 普通边框发光
+@mixin neon-border($color: $neon-cyan) {
+  border: 1px solid $color;
+  box-shadow:
+    0 0 8px rgba($color, 0.3),
+    inset 0 0 8px rgba($color, 0.1);
+}
+
+// 强发光边框 (用于激活状态)
+@mixin neon-border-strong($color: $neon-cyan) {
+  border: 1px solid $color;
+  box-shadow:
+    0 0 15px rgba($color, 0.5),
+    0 0 30px rgba($color, 0.2),
+    inset 0 0 10px rgba($color, 0.15);
+}
+
+// ========== 霓虹按钮效果 ==========
+@mixin neon-button($color: $neon-cyan) {
+  font-family: $font-serif;
+  background: transparent;
+  border: 1px solid $color;
+  color: $color;
+  text-shadow: 0 0 8px rgba($color, 0.6);
+  box-shadow:
+    0 0 10px rgba($color, 0.3),
+    inset 0 0 10px rgba($color, 0.1);
+
+  &:hover {
+    background: rgba($color, 0.15);
+    box-shadow:
+      0 0 20px rgba($color, 0.5),
+      0 0 40px rgba($color, 0.2),
+      inset 0 0 15px rgba($color, 0.2);
+  }
+
+  &:active {
+    background: rgba($color, 0.25);
+  }
+}
+
+// ========== 故障闪烁动画 ==========
+@mixin glitch-hover {
+  &:hover {
+    animation: glitch 0.3s ease;
+  }
+
+  @keyframes glitch {
+    0%, 100% { transform: translate(0); }
+    20% { transform: translate(-2px, 1px); }
+    40% { transform: translate(2px, -1px); }
+    60% { transform: translate(-1px, -1px); }
+    80% { transform: translate(1px, 1px); }
+  }
+}
+
+// ========== 扫描线效果 (可选) ==========
+@mixin scanline-overlay {
+  position: relative;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 0, 0, 0.1) 2px,
+      rgba(0, 0, 0, 0.1) 4px
+    );
+    pointer-events: none;
+    z-index: 1;
+  }
+}
+
+// ========== 霓虹文字效果 ==========
+@mixin neon-text($color: $neon-cyan) {
+  color: $color;
+  text-shadow: 0 0 8px rgba($color, 0.6);
+}

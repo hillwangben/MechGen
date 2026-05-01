@@ -94,19 +94,20 @@ const navigateTo = (path: string) => {
     width: 44px;
     height: 44px;
     color: $text-secondary;
-    border-radius: $border-radius;
+    border-radius: 0;
     cursor: pointer;
     transition: all $transition-fast;
     position: relative;
 
     &:hover {
-      color: $tech-blue;
-      background: rgba($tech-blue, 0.1);
+      color: $neon-cyan;
+      background: rgba($neon-cyan, 0.1);
     }
 
     &.is-active {
-      color: $tech-blue;
-      background: rgba($tech-blue, 0.15);
+      color: $neon-cyan;
+      background: rgba($neon-cyan, 0.15);
+      text-shadow: 0 0 10px rgba($neon-cyan, 0.6);
 
       &::before {
         content: '';
@@ -116,9 +117,9 @@ const navigateTo = (path: string) => {
         transform: translateY(-50%);
         width: 3px;
         height: 24px;
-        background: $tech-blue;
+        background: $neon-cyan;
         border-radius: 0 2px 2px 0;
-        box-shadow: 0 0 8px rgba($tech-blue, 0.5);
+        box-shadow: 0 0 15px rgba($neon-cyan, 0.8);
       }
     }
   }

@@ -182,18 +182,18 @@ const formatTime = (date: Date): string => {
   height: 100%;
   background: $bg-secondary;
 
-  // 头部
+  // 头部 — 宋体 + 霓虹发光
   &__header {
     @include flex-between;
     height: 48px;
     padding: 0 $spacing-md;
     border-bottom: 1px solid $border-color;
-    font-family: $font-mono;
-    font-size: 14px;
-    color: $text-primary;
+    font-family: $font-serif;
+    font-size: $font-size-base;
+    @include neon-text($neon-cyan);
 
     .el-icon {
-      color: $tech-blue;
+      color: $neon-cyan;
     }
   }
 
@@ -218,8 +218,9 @@ const formatTime = (date: Date): string => {
       }
 
       .chat-panel__message-bubble {
-        background: rgba($tech-blue, 0.15);
-        border: 1px solid rgba($tech-blue, 0.3);
+        background: rgba($neon-cyan, 0.15);
+        border: 1px solid rgba($neon-cyan, 0.3);
+        @include neon-border($neon-cyan-dim);
       }
     }
 
@@ -235,14 +236,18 @@ const formatTime = (date: Date): string => {
     flex-shrink: 0;
 
     .el-avatar {
+      border-radius: 0;  // 直角设计
+
       &.is-user {
-        background: rgba($tech-blue, 0.2);
-        color: $tech-blue;
+        background: rgba($neon-cyan, 0.2);
+        color: $neon-cyan;
+        border: 1px solid $neon-cyan-dim;
       }
 
       &.is-assistant {
         background: rgba($status-purple, 0.2);
         color: $status-purple;
+        border: 1px solid $status-purple;
       }
     }
   }
@@ -254,8 +259,9 @@ const formatTime = (date: Date): string => {
 
   &__message-bubble {
     padding: $spacing-sm $spacing-md;
-    border-radius: $border-radius;
-    font-size: 13px;
+    border-radius: 0;  // 直角设计
+    font-family: $font-sans;
+    font-size: $font-size-sm;
     line-height: 1.6;
     color: $text-primary;
 
@@ -267,18 +273,18 @@ const formatTime = (date: Date): string => {
   }
 
   &__message-time {
+    font-family: $font-mono;
     font-size: 11px;
     color: $text-disabled;
     margin-top: $spacing-xs;
   }
 
-  // 加载动画
+  // 加载动画 — 霓虹色光点
   &__loading-dot {
     display: inline-block;
     width: 6px;
     height: 6px;
-    border-radius: 50%;
-    background: $text-secondary;
+    background: $neon-cyan;
     animation: loading 1.4s infinite both;
 
     &:nth-child(2) {
@@ -301,20 +307,25 @@ const formatTime = (date: Date): string => {
     }
   }
 
-  // 输入区域
+  // 输入区域 — 霓虹发光聚焦
   &__input {
     padding: $spacing-md;
     border-top: 1px solid $border-color;
 
     :deep(.el-textarea__inner) {
-      background: $bg-primary;
-      border-color: $border-color;
-      color: $text-primary;
       font-family: $font-sans;
+      background: rgba(0, 20, 40, 0.6);
+      border: 1px solid $neon-cyan-dim;
+      border-radius: 0;
+      color: $text-primary;
 
       &:focus {
-        border-color: $tech-blue;
-        box-shadow: $shadow-glow;
+        border-color: $neon-cyan;
+        box-shadow: 0 0 15px rgba($neon-cyan, 0.3);
+      }
+
+      &::placeholder {
+        color: $text-disabled;
       }
     }
   }
@@ -325,6 +336,7 @@ const formatTime = (date: Date): string => {
   }
 
   &__input-hint {
+    font-family: $font-serif;
     font-size: 11px;
     color: $text-disabled;
   }

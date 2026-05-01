@@ -209,7 +209,7 @@ const initGraph = () => {
     }
   }
   // 捕获阶段监听：在 X6 之前拦截右键事件，确保菜单可靠弹出
-  containerRef.value.addEventListener('contextmenu', handleCanvasContextMenu, true)
+  containerRef.value?.addEventListener('contextmenu', handleCanvasContextMenu, true)
 
   // 左键点击空白处关闭菜单
   graph.on('blank:click', () => hideCtxMenu())
@@ -590,7 +590,7 @@ onMounted(() => {
   if (containerRef.value) {
     containerRef.value.addEventListener('click', (e: MouseEvent) => {
       const menu = document.querySelector('.model-canvas__ctxmenu')
-      if (menu && !menu.contains(e.target as Node)) {
+      if (menu && !menu.contains(e.target as globalThis.Node)) {
         hideCtxMenu()
       }
     })

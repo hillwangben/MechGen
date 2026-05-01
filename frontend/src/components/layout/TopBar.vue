@@ -88,16 +88,17 @@ const handleSave = () => {
     @include flex-center;
     width: 36px;
     height: 36px;
-    color: $tech-blue;
-    background: rgba($tech-blue, 0.1);
-    border-radius: $border-radius;
+    color: $neon-cyan;
+    background: rgba($neon-cyan, 0.1);
+    border-radius: 0;
+    border: 1px solid $neon-cyan-dim;
   }
 
   &__title {
-    font-size: 16px;
+    font-family: $font-serif;
+    font-size: $font-size-md;
     font-weight: 600;
-    color: $text-primary;
-    font-family: $font-mono;
+    @include neon-text($neon-cyan);
   }
 
   &__center {
@@ -111,7 +112,7 @@ const handleSave = () => {
     align-items: center;
     gap: $spacing-xs;
     font-family: $font-mono;
-    font-size: 13px;
+    font-size: $font-size-sm;
   }
 
   &__task-label {
@@ -130,7 +131,7 @@ const handleSave = () => {
     gap: $spacing-sm;
     cursor: pointer;
     padding: $spacing-xs $spacing-sm;
-    border-radius: $border-radius;
+    border-radius: 0;
     transition: background $transition-fast;
 
     &:hover {
@@ -139,12 +140,13 @@ const handleSave = () => {
   }
 
   &__avatar {
-    background: rgba($tech-blue, 0.2);
-    color: $tech-blue;
+    background: rgba($neon-cyan, 0.2);
+    color: $neon-cyan;
   }
 
   &__username {
-    font-size: 13px;
+    font-family: $font-serif;
+    font-size: $font-size-sm;
     color: $text-primary;
   }
 }

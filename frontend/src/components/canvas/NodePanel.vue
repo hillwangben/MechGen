@@ -127,18 +127,18 @@ const toggleCategory = (category: any) => {
   background: $bg-secondary;
   border-right: 1px solid $border-color;
 
-  // 头部
+  // 头部 — 宋体 + 霓虹发光
   &__header {
     @include flex-between;
     height: 48px;
     padding: 0 $spacing-md;
     border-bottom: 1px solid $border-color;
-    font-family: $font-mono;
-    font-size: 14px;
-    color: $text-primary;
+    font-family: $font-serif;
+    font-size: $font-size-base;
+    @include neon-text($neon-cyan);
 
     .el-icon {
-      color: $tech-blue;
+      color: $neon-cyan;
     }
 
     > :last-child {
@@ -164,10 +164,11 @@ const toggleCategory = (category: any) => {
     gap: $spacing-xs;
     padding: $spacing-sm;
     color: $text-secondary;
-    font-size: 12px;
+    font-family: $font-serif;
+    font-size: $font-size-xs;
     font-weight: 500;
     cursor: pointer;
-    border-radius: $border-radius;
+    border-radius: 0;
     transition: all $transition-fast;
 
     &:hover {
@@ -176,17 +177,19 @@ const toggleCategory = (category: any) => {
     }
 
     > :nth-child(2) {
-      color: $tech-blue;
+      color: $neon-cyan;
     }
   }
 
   &__category-count {
     margin-left: auto;
     padding: 2px 6px;
+    font-family: $font-mono;
     font-size: 10px;
     background: $bg-tertiary;
-    border-radius: 10px;
-    color: $text-disabled;
+    border-radius: 0;
+    color: $neon-yellow;
+    border: 1px solid $neon-cyan-dim;
   }
 
   // 节点列表
@@ -200,12 +203,13 @@ const toggleCategory = (category: any) => {
     gap: $spacing-sm;
     padding: $spacing-sm $spacing-sm;
     margin-bottom: 2px;
-    border-radius: $border-radius;
+    border-radius: 0;
     cursor: grab;
     transition: all $transition-fast;
 
     &:hover {
       background: $bg-tertiary;
+      @include neon-border($neon-cyan-dim);
 
       .node-panel__node-drag {
         opacity: 1;
@@ -223,14 +227,15 @@ const toggleCategory = (category: any) => {
     width: 28px;
     height: 28px;
     border: 1px solid;
-    border-radius: $border-radius;
+    border-radius: 0;
     background: rgba($bg-primary, 0.5);
     flex-shrink: 0;
   }
 
   &__node-name {
     flex: 1;
-    font-size: 12px;
+    font-family: $font-serif;
+    font-size: $font-size-xs;
     color: $text-primary;
     @include ellipsis;
   }
@@ -247,6 +252,7 @@ const toggleCategory = (category: any) => {
     gap: $spacing-xs;
     padding: $spacing-sm;
     border-top: 1px solid $border-color;
+    font-family: $font-serif;
     font-size: 11px;
     color: $text-disabled;
   }
