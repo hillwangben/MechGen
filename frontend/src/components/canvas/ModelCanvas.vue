@@ -1,14 +1,15 @@
 <script setup lang="ts">
 // 模型画布组件 - 决策树流程布局
 // Shift + 左键多选，右键菜单创建框，Del 删除
-import { ref, reactive, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, reactive, onMounted, onUnmounted, nextTick, markRaw } from 'vue'
 import { Graph, Node, Selection } from '@antv/x6'
 
 const emit = defineEmits<{
   (e: 'frame-click', type: 'optimize' | 'collide', data: any): void
 }>()
 
-const containerRef = ref<HTMLDivElement>()
+const containerRef = ref<HTMLDivElement>() // 画布外层容器
+const x6ContainerRef = ref<HTMLDivElement>()  // X6 专用子容器，避免 snapshoot 移除 Vue 元素
 let graph: Graph | null = null
 
 // ========== 任务ID计数器 ==========
@@ -27,7 +28,8 @@ const showCtxMenu = (x: number, y: number, targets: Node[]) => {
   ctxMenu.visible = true
   ctxMenu.x = x
   ctxMenu.y = y
-  ctxMenu.targets = targets
+  // markRaw 防止 Vue 深度代理 X6 Node 对象（含循环引用/内部属性，reactive 会导致 __vnode 错误）
+  ctxMenu.targets = targets.map(n => markRaw(n))
 }
 
 const hideCtxMenu = () => { ctxMenu.visible = false }
@@ -98,7 +100,7 @@ const syncFrameOverlays = () => {
 
 // ========== 初始化画布 ==========
 const initGraph = () => {
-  if (!containerRef.value) return
+  if (!x6ContainerRef.value) return
 
   // 注册独立模型圆形节点
   Graph.registerNode('model-circle', {
@@ -144,9 +146,9 @@ const initGraph = () => {
   })
 
   graph = new Graph({
-    container: containerRef.value,
-    width: containerRef.value.offsetWidth,
-    height: containerRef.value.offsetHeight,
+    container: x6ContainerRef.value,
+    width: x6ContainerRef.value.offsetWidth,
+    height: x6ContainerRef.value.offsetHeight,
     background: { color: '#0a0e27' },
     grid: { visible: true, type: 'dot', size: 20, args: { color: 'rgba(0, 212, 255, 0.05)', thickness: 1 } },
     mousewheel: { enabled: true, minScale: 0.3, maxScale: 2.5, factor: 1.1 },
@@ -194,43 +196,22 @@ const initGraph = () => {
     }
   })
 
-  // 右键菜单：使用原生 DOM 事件确保可靠性
-  // X6 的 node:contextmenu 在 embed 场景下可能不触发，改用容器级监听
-  const canvasEl = containerRef.value
-  canvasEl.addEventListener('contextmenu', (evt: MouseEvent) => {
-    evt.preventDefault()
-
-    // 获取当前已选中的模型节点
+  // 右键菜单：在画布任意位置右键 → 有选中模型时弹出菜单
+  // 交互流程：左键单击选中模型 → Shift+左键多选 → 右键任意位置弹出菜单
+  const handleCanvasContextMenu = (e: MouseEvent) => {
+    e.preventDefault() // 阻止浏览器默认右键菜单
     const selectedModels = graph!.getSelectedCells()
-      .filter(c => c.isNode() && (c.shape === 'model-circle' || c.shape === 'model-circle-generated')) as Node[]
-
-    // 尝试通过坐标反查被右键的节点 (getNodesInArea 参数: x, y, w, h)
-    const localPos = graph!.clientToLocal(evt.clientX, evt.clientY)
-    const views = graph!.getNodesInArea(localPos.x - 4, localPos.y - 4, 8, 8)
-    const clickedNode = (views || []).find((n: any) =>
-      n.shape === 'model-circle' || n.shape === 'model-circle-generated'
-    ) as Node | undefined
-
-    if (clickedNode) {
-      // 右键了某个模型节点
-      if (selectedModels.map(s => s.id).includes(clickedNode.id) && selectedModels.length > 0) {
-        // 已在选中列表 → 保持多选状态
-        showCtxMenu(evt.clientX, evt.clientY, selectedModels)
-      } else {
-        // 不在选中列表 → 切换为单选该节点
-        graph!.cleanSelection()
-        graph!.select(clickedNode)
-        showCtxMenu(evt.clientX, evt.clientY, [clickedNode])
-      }
-    } else if (selectedModels.length > 0) {
-      // 右键空白区域但有已选模型 → 显示菜单
-      showCtxMenu(evt.clientX, evt.clientY, selectedModels)
+      .filter((c: any) => c.isNode() && (c.shape === 'model-circle' || c.shape === 'model-circle-generated')) as Node[]
+    if (selectedModels.length > 0) {
+      showCtxMenu(e.clientX, e.clientY, selectedModels)
     } else {
       hideCtxMenu()
     }
-  })
+  }
+  // 捕获阶段监听：在 X6 之前拦截右键事件，确保菜单可靠弹出
+  containerRef.value.addEventListener('contextmenu', handleCanvasContextMenu, true)
 
-  // 点击空白处关闭菜单
+  // 左键点击空白处关闭菜单
   graph.on('blank:click', () => hideCtxMenu())
 
   // 选中模型节点 → 实心色
@@ -598,18 +579,25 @@ const setupDragDrop = () => {
 }
 
 const handleResize = () => {
-  if (!graph || !containerRef.value) return
-  graph.resize(containerRef.value.offsetWidth, containerRef.value.offsetHeight)
+  if (!graph || !x6ContainerRef.value) return
+  graph.resize(x6ContainerRef.value.offsetWidth, x6ContainerRef.value.offsetHeight)
 }
 
 onMounted(() => {
   initGraph()
   window.addEventListener('resize', handleResize)
-  document.addEventListener('click', hideCtxMenu)
+  // 点击画布容器外部时关闭菜单
+  if (containerRef.value) {
+    containerRef.value.addEventListener('click', (e: MouseEvent) => {
+      const menu = document.querySelector('.model-canvas__ctxmenu')
+      if (menu && !menu.contains(e.target as Node)) {
+        hideCtxMenu()
+      }
+    })
+  }
 })
 onUnmounted(() => {
   window.removeEventListener('resize', handleResize)
-  document.removeEventListener('click', hideCtxMenu)
   document.removeEventListener('keydown', handleKeyDown)
   graph?.dispose()
 })
@@ -617,6 +605,8 @@ onUnmounted(() => {
 
 <template>
   <div ref="containerRef" class="model-canvas">
+    <!-- X6 专用子容器 — 避免 X6 snapshoot 移除 Vue 管理的 DOM 元素 -->
+    <div ref="x6ContainerRef" class="model-canvas__x6"></div>
     <!-- 框架覆盖层 -->
     <div
       v-for="frame in frameOverlays"
@@ -637,19 +627,18 @@ onUnmounted(() => {
       >
         {{ frame.title }}
       </div>
-      <div class="model-canvas__frame-output" :style="{ borderTopColor: frame.color + '40', color: '#00ff88' }">
+      <div class="model-canvas__frame-output" :style="{ backgroundColor: '#0a0e27', borderTopColor: frame.color + '40', color: '#00ff88' }">
         {{ frame.outputLabel }}
       </div>
     </div>
 
-    <!-- 上下文菜单 -->
-    <Teleport to="body">
-      <div
-        v-if="ctxMenu.visible"
-        class="model-canvas__ctxmenu"
-        :style="{ left: ctxMenu.x + 'px', top: ctxMenu.y + 'px' }"
-        @click.stop
-      >
+    <!-- 上下文菜单 — 内联渲染 -->
+    <div
+      v-if="ctxMenu.visible"
+      class="model-canvas__ctxmenu"
+      :style="{ left: ctxMenu.x + 'px', top: ctxMenu.y + 'px' }"
+      @click.stop
+    >
         <div class="model-canvas__ctxmenu-title">
           已选 {{ ctxMenu.targets.length }} 个模型
         </div>
@@ -662,7 +651,6 @@ onUnmounted(() => {
           创建碰撞框
         </div>
       </div>
-    </Teleport>
 
     <!-- 图例 -->
     <div class="model-canvas__legend">
@@ -702,6 +690,15 @@ onUnmounted(() => {
   background: #0a0e27;
   position: relative;
   overflow: hidden;
+
+  // X6 独立子容器 — 不对 Vue 元素进行 snapshoot
+  &__x6 {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
 
   // 上下文菜单
   &__ctxmenu {
@@ -761,7 +758,7 @@ onUnmounted(() => {
     position: absolute;
     border: 2px dashed;
     border-radius: 6px;
-    background: #0a0e27;
+    background: transparent; // 透明，让 X6 渲染的模型圆可见
     pointer-events: none;
     z-index: 5;
     box-sizing: border-box;
