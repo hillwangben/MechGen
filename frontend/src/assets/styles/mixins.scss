@@ -1,148 +1,5 @@
-// 样式混入 - 科技风主题
+// 赛博朋克混入 — 霓虹效果、HUD元素
 @import './variables.scss';
-
-// ========== 发光边框 ==========
-@mixin glow-border($color: $tech-blue, $width: 1px) {
-  border: $width solid $color;
-  box-shadow: 0 0 10px rgba($color, 0.3);
-}
-
-// ========== 发光文字 ==========
-@mixin glow-text($color: $tech-blue) {
-  color: $color;
-  text-shadow: 0 0 10px rgba($color, 0.5);
-}
-
-// ========== 科技风卡片 ==========
-@mixin tech-card {
-  background: $bg-overlay;
-  border: 1px solid $border-color;
-  border-radius: $border-radius;
-  backdrop-filter: blur(10px);
-  transition: border-color $transition-fast;
-
-  &:hover {
-    border-color: $tech-blue;
-    box-shadow: $shadow-glow;
-  }
-}
-
-// ========== 科技风按钮 ==========
-@mixin tech-button($bg: $tech-blue) {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: $spacing-sm $spacing-md;
-  font-family: $font-mono;
-  font-size: 13px;
-  color: $text-primary;
-  background-color: $bg;
-  border: 1px solid $bg;
-  border-radius: $border-radius;
-  cursor: pointer;
-  transition: all $transition-fast;
-
-  &:hover {
-    box-shadow: $shadow-glow;
-    transform: translateY(-1px);
-  }
-
-  &:active {
-    transform: translateY(0);
-  }
-}
-
-// ========== 状态指示器 ==========
-@mixin status-dot($color) {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background-color: $color;
-  box-shadow: 0 0 6px rgba($color, 0.6);
-}
-
-// ========== 脉冲动画 ==========
-@mixin pulse($color: $tech-blue) {
-  animation: pulse 2s infinite;
-
-  @keyframes pulse {
-    0% {
-      box-shadow: 0 0 0 0 rgba($color, 0.4);
-    }
-    70% {
-      box-shadow: 0 0 0 10px rgba($color, 0);
-    }
-    100% {
-      box-shadow: 0 0 0 0 rgba($color, 0);
-    }
-  }
-}
-
-// ========== 流动边框 ==========
-@mixin flow-border($color: $tech-blue) {
-  position: relative;
-  overflow: hidden;
-
-  &::before {
-    content: '';
-    position: absolute;
-    top: -2px;
-    left: -2px;
-    right: -2px;
-    bottom: -2px;
-    background: linear-gradient(
-      45deg,
-      transparent,
-      $color,
-      transparent
-    );
-    background-size: 200% 200%;
-    animation: flow 3s linear infinite;
-    z-index: -1;
-    border-radius: inherit;
-  }
-
-  @keyframes flow {
-    0% {
-      background-position: 0% 50%;
-    }
-    50% {
-      background-position: 100% 50%;
-    }
-    100% {
-      background-position: 0% 50%;
-    }
-  }
-}
-
-// ========== 响应式断点 ==========
-@mixin respond-to($breakpoint) {
-  @if $breakpoint == sm {
-    @media (min-width: $breakpoint-sm) { @content; }
-  } @else if $breakpoint == md {
-    @media (min-width: $breakpoint-md) { @content; }
-  } @else if $breakpoint == lg {
-    @media (min-width: $breakpoint-lg) { @content; }
-  } @else if $breakpoint == xl {
-    @media (min-width: $breakpoint-xl) { @content; }
-  }
-}
-
-// ========== 单行文本溢出省略 ==========
-@mixin ellipsis {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-// ========== 多行文本溢出省略 ==========
-@mixin line-clamp($lines: 2) {
-  display: -webkit-box;
-  -webkit-line-clamp: $lines;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
 
 // ========== Flex 布局快捷 ==========
 @mixin flex-center {
@@ -162,72 +19,207 @@
   flex-direction: column;
 }
 
-// ========== 毛玻璃效果 ==========
-@mixin glass($opacity: 0.85) {
+// ========== 单/多行省略 ==========
+@mixin ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@mixin line-clamp($lines: 2) {
+  display: -webkit-box;
+  -webkit-line-clamp: $lines;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+// ========== 毛玻璃 ==========
+@mixin glass($opacity: 0.88) {
   background: rgba($bg-secondary, $opacity);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
 }
 
-// ========== 霓虹边框效果 ==========
-// 普通边框发光
+// ========== 状态指示点 ==========
+@mixin status-dot($color) {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: $color;
+  box-shadow: 0 0 6px rgba($color, 0.8), 0 0 12px rgba($color, 0.4);
+}
+
+// ========== 霓虹文字发光 ==========
+@mixin neon-text($color: $neon-cyan) {
+  color: $color;
+  text-shadow:
+    0 0 7px rgba($color, 0.7),
+    0 0 20px rgba($color, 0.3);
+}
+
+// ========== 霓虹边框 (普通) ==========
 @mixin neon-border($color: $neon-cyan) {
   border: 1px solid $color;
   box-shadow:
-    0 0 8px rgba($color, 0.3),
-    inset 0 0 8px rgba($color, 0.1);
+    0 0 5px rgba($color, 0.4),
+    0 0 12px rgba($color, 0.2),
+    inset 0 0 5px rgba($color, 0.08);
 }
 
-// 强发光边框 (用于激活状态)
+// ========== 霓虹边框 (强发光) ==========
 @mixin neon-border-strong($color: $neon-cyan) {
   border: 1px solid $color;
   box-shadow:
-    0 0 15px rgba($color, 0.5),
-    0 0 30px rgba($color, 0.2),
-    inset 0 0 10px rgba($color, 0.15);
+    0 0 8px rgba($color, 0.5),
+    0 0 25px rgba($color, 0.3),
+    0 0 50px rgba($color, 0.1),
+    inset 0 0 8px rgba($color, 0.15);
 }
 
-// ========== 霓虹按钮效果 ==========
+// ========== 霓虹按钮 ==========
 @mixin neon-button($color: $neon-cyan) {
   font-family: $font-serif;
   background: transparent;
   border: 1px solid $color;
   color: $color;
-  text-shadow: 0 0 8px rgba($color, 0.6);
+  text-shadow: 0 0 8px rgba($color, 0.7);
   box-shadow:
-    0 0 10px rgba($color, 0.3),
-    inset 0 0 10px rgba($color, 0.1);
+    0 0 8px rgba($color, 0.3),
+    inset 0 0 8px rgba($color, 0.08);
+  transition: all $transition-fast;
 
   &:hover {
-    background: rgba($color, 0.15);
+    background: rgba($color, 0.12);
     box-shadow:
-      0 0 20px rgba($color, 0.5),
-      0 0 40px rgba($color, 0.2),
-      inset 0 0 15px rgba($color, 0.2);
+      0 0 18px rgba($color, 0.5),
+      0 0 36px rgba($color, 0.2),
+      inset 0 0 12px rgba($color, 0.18);
+    text-shadow: 0 0 12px rgba($color, 0.9);
   }
 
   &:active {
-    background: rgba($color, 0.25);
+    background: rgba($color, 0.22);
   }
 }
 
-// ========== 故障闪烁动画 ==========
-@mixin glitch-hover {
-  &:hover {
-    animation: glitch 0.3s ease;
-  }
+// ========== 呼吸脉冲 (循环动画) ==========
+@mixin neon-pulse($color: $neon-cyan, $duration: 2.5s) {
+  animation: neon-pulse-#{unique-id()} $duration ease-in-out infinite;
 
-  @keyframes glitch {
-    0%, 100% { transform: translate(0); }
-    20% { transform: translate(-2px, 1px); }
-    40% { transform: translate(2px, -1px); }
-    60% { transform: translate(-1px, -1px); }
-    80% { transform: translate(1px, 1px); }
+  @keyframes neon-pulse-#{unique-id()} {
+    0%, 100% {
+      box-shadow: 0 0 5px rgba($color, 0.3), 0 0 10px rgba($color, 0.15);
+    }
+    50% {
+      box-shadow: 0 0 15px rgba($color, 0.6), 0 0 30px rgba($color, 0.3), 0 0 45px rgba($color, 0.1);
+    }
   }
 }
 
-// ========== 扫描线效果 (可选) ==========
-@mixin scanline-overlay {
+// ========== 角标装饰 — 赛博朋克HUD框架四角 ==========
+// 用于面板/卡片/容器的四角L形支架
+@mixin corner-brackets($color: $neon-cyan, $size: 8px, $thickness: 1px) {
+  position: relative;
+
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    pointer-events: none;
+    z-index: 2;
+    width: $size;
+    height: $size;
+    border-color: $color;
+    border-style: solid;
+  }
+
+  // 左上角
+  &::before {
+    top: -1px;
+    left: -1px;
+    border-width: $thickness 0 0 $thickness;
+  }
+
+  // 右下角
+  &::after {
+    bottom: -1px;
+    right: -1px;
+    border-width: 0 $thickness $thickness 0;
+  }
+}
+
+// ========== 四角标 (完整四角) ==========
+@mixin corner-brackets-all($color: $neon-cyan, $size: 10px, $thickness: 1px) {
+  position: relative;
+
+  // 用两个伪元素 + box-shadow 实现四角
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    z-index: 2;
+    background:
+      linear-gradient(to right, $color $size, transparent $size),
+      linear-gradient(to bottom, $color $size, transparent $size),
+      linear-gradient(to left, $color $size, transparent $size),
+      linear-gradient(to bottom, $color $size, transparent $size);
+    background-position:
+      top left,
+      top left,
+      top right,
+      top right;
+    background-size:
+      $size $thickness,
+      $thickness $size,
+      $size $thickness,
+      $thickness $size;
+    background-repeat: no-repeat;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    pointer-events: none;
+    z-index: 2;
+    height: $size;
+    background:
+      linear-gradient(to right, $color $size, transparent $size),
+      linear-gradient(to top, $color $size, transparent $size),
+      linear-gradient(to left, $color $size, transparent $size),
+      linear-gradient(to top, $color $size, transparent $size);
+    background-position:
+      bottom left,
+      bottom left,
+      bottom right,
+      bottom right;
+    background-size:
+      $size $thickness,
+      $thickness $size,
+      $size $thickness,
+      $thickness $size;
+    background-repeat: no-repeat;
+  }
+}
+
+// ========== HUD数据读数样式 ==========
+@mixin hud-readout($color: $neon-cyan) {
+  font-family: $font-mono;
+  font-size: $font-size-xs;
+  color: $color;
+  text-shadow: 0 0 5px rgba($color, 0.5);
+  letter-spacing: 0.05em;
+}
+
+// ========== 扫描线叠加 (局部) ==========
+@mixin scanline-overlay($opacity: 0.06) {
   position: relative;
 
   &::after {
@@ -241,16 +233,136 @@
       0deg,
       transparent,
       transparent 2px,
-      rgba(0, 0, 0, 0.1) 2px,
-      rgba(0, 0, 0, 0.1) 4px
+      rgba(0, 0, 0, $opacity) 2px,
+      rgba(0, 0, 0, $opacity) 4px
     );
     pointer-events: none;
-    z-index: 1;
+    z-index: 100;
   }
 }
 
-// ========== 霓虹文字效果 ==========
-@mixin neon-text($color: $neon-cyan) {
+// ========== 故障动画 ==========
+@mixin glitch-hover {
+  &:hover {
+    animation: glitch 0.35s ease;
+  }
+
+  @keyframes glitch {
+    0%, 100% { transform: translate(0); }
+    15% { transform: translate(-3px, 1px); }
+    30% { transform: translate(3px, -1px); }
+    45% { transform: translate(-2px, -2px); }
+    60% { transform: translate(2px, 2px); }
+    75% { transform: translate(-1px, 1px); }
+  }
+}
+
+// ========== 边框跑马灯动画 ==========
+@mixin border-chase($color: $neon-cyan, $duration: 4s) {
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: -1px;
+    left: -1px;
+    right: -1px;
+    bottom: -1px;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      $color 5%,
+      $color 10%,
+      transparent 15%,
+      transparent 100%
+    );
+    background-size: 200% 100%;
+    animation: border-chase $duration linear infinite;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  @keyframes border-chase {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+}
+
+// ========== 向后兼容别名 (旧代码引用) ==========
+@mixin glow-border($color: $neon-cyan, $width: 1px) {
+  border: $width solid $color;
+  box-shadow: 0 0 10px rgba($color, 0.3);
+}
+@mixin glow-text($color: $neon-cyan) {
   color: $color;
-  text-shadow: 0 0 8px rgba($color, 0.6);
+  text-shadow: 0 0 10px rgba($color, 0.5);
+}
+@mixin tech-card {
+  background: $bg-overlay;
+  border: 1px solid $border-color;
+  backdrop-filter: blur(10px);
+  transition: border-color $transition-fast;
+  &:hover {
+    border-color: $neon-cyan;
+    box-shadow: $shadow-glow-cyan;
+  }
+}
+@mixin tech-button($bg: $neon-cyan) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: $spacing-sm $spacing-md;
+  font-family: $font-mono;
+  font-size: 13px;
+  color: $text-primary;
+  background-color: $bg;
+  border: 1px solid $bg;
+  cursor: pointer;
+  transition: all $transition-fast;
+  &:hover {
+    box-shadow: $shadow-glow-cyan;
+    transform: translateY(-1px);
+  }
+  &:active {
+    transform: translateY(0);
+  }
+}
+@mixin pulse($color: $neon-cyan) {
+  animation: pulse 2s infinite;
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba($color, 0.4); }
+    70% { box-shadow: 0 0 0 10px rgba($color, 0); }
+    100% { box-shadow: 0 0 0 0 rgba($color, 0); }
+  }
+}
+@mixin flow-border($color: $neon-cyan) {
+  position: relative;
+  overflow: hidden;
+  &::before {
+    content: '';
+    position: absolute;
+    top: -2px; left: -2px; right: -2px; bottom: -2px;
+    background: linear-gradient(45deg, transparent, $color, transparent);
+    background-size: 200% 200%;
+    animation: flow 3s linear infinite;
+    z-index: -1;
+  }
+  @keyframes flow {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+}
+
+// ========== 响应式断点 ==========
+@mixin respond-to($breakpoint) {
+  @if $breakpoint == sm {
+    @media (min-width: $breakpoint-sm) { @content; }
+  } @else if $breakpoint == md {
+    @media (min-width: $breakpoint-md) { @content; }
+  } @else if $breakpoint == lg {
+    @media (min-width: $breakpoint-lg) { @content; }
+  } @else if $breakpoint == xl {
+    @media (min-width: $breakpoint-xl) { @content; }
+  }
 }

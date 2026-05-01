@@ -1,42 +1,36 @@
-// 全局样式 - 赛博朋克风格主题
+// 全局样式 — 赛博朋克暗夜霓虹主题
 @import './variables.scss';
 @import './mixins.scss';
 
-// ========== CSS 变量 (供 Element Plus 覆写) ==========
+// ============================================================
+// CSS 变量 — Element Plus 覆写
+// ============================================================
 :root {
-  // 背景
   --el-bg-color: #{$bg-secondary};
   --el-bg-color-overlay: #{$bg-tertiary};
-  --el-bg-color-page: #{$bg-primary};
+  --el-bg-color-page: #{$bg-void};
 
-  // 文字
   --el-text-color-primary: #{$text-primary};
   --el-text-color-regular: #{$text-secondary};
   --el-text-color-disabled: #{$text-disabled};
 
-  // 边框
   --el-border-color: #{$border-color};
   --el-border-color-light: #{$neon-cyan-dim};
-  --el-border-radius-base: 0;  // 直角更符合赛博朋克
+  --el-border-radius-base: 0;
 
-  // 主题色
   --el-color-primary: #{$neon-cyan};
-  --el-color-primary-light-3: #{lighten($neon-cyan, 15%)};
-  --el-color-primary-light-5: #{lighten($neon-cyan, 25%)};
-  --el-color-primary-dark-2: #{darken($neon-cyan, 15%)};
+  --el-color-primary-light-3: #66ffff;
+  --el-color-primary-light-5: #99ffff;
+  --el-color-primary-dark-2: #00cccc;
 
-  // 功能色
   --el-color-success: #{$status-green};
   --el-color-warning: #{$neon-magenta};
   --el-color-danger: #{$status-red};
-
-  // 字体
-  --font-serif: #{$font-serif};
-  --font-mono: #{$font-mono};
-  --font-sans: #{$font-sans};
 }
 
-// ========== 全局重置 ==========
+// ============================================================
+// 全局重置
+// ============================================================
 *,
 *::before,
 *::after {
@@ -45,184 +39,187 @@
   padding: 0;
 }
 
-html,
-body {
+html, body {
   width: 100%;
   height: 100%;
   overflow: hidden;
   font-family: $font-sans;
   font-size: 14px;
   color: $text-primary;
-  background-color: $bg-primary;
+  background-color: $bg-void;
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }
 
 #app {
   width: 100%;
   height: 100%;
+  // 全局噪点纹理 + 微弱网格
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(0, 255, 255, 0.03) 0%, transparent 70%),
+    radial-gradient(ellipse at 80% 80%, rgba(255, 0, 255, 0.02) 0%, transparent 60%),
+    $bg-void;
 }
 
-// ========== 链接 ==========
+// ============================================================
+// 全局 CRT 扫描线 — 整个应用蒙层
+// ============================================================
+body::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.04) 2px,
+    rgba(0, 0, 0, 0.04) 4px
+  );
+  pointer-events: none;
+  z-index: 9999;
+}
+
+// ============================================================
+// 链接
+// ============================================================
 a {
   color: $neon-cyan;
   text-decoration: none;
   transition: color $transition-fast;
-
-  &:hover {
-    color: $tech-cyan;
-  }
+  &:hover { color: $neon-cyan-bright; }
 }
 
-// ========== 滚动条样式 ==========
+// ============================================================
+// 滚动条 — 霓虹风格
+// ============================================================
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
-
 ::-webkit-scrollbar-track {
-  background: $bg-primary;
+  background: $bg-void;
 }
-
 ::-webkit-scrollbar-thumb {
   background: $neon-cyan-dim;
-  border-radius: 3px;
-
-  &:hover {
-    background: $neon-cyan;
-  }
+  &:hover { background: $neon-cyan; }
 }
 
-// ========== 网格线背景 ==========
+// ============================================================
+// 网格背景工具类
+// ============================================================
 .bg-grid {
   background-image:
-    linear-gradient(rgba(0, 255, 255, 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 255, 255, 0.05) 1px, transparent 1px);
-  background-size: 25px 25px;
+    linear-gradient(rgba(0, 255, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 255, 255, 0.04) 1px, transparent 1px);
+  background-size: 20px 20px;
 }
 
-// ========== Element Plus 覆写 ==========
+// ============================================================
+// Element Plus 组件覆写 — 赛博朋克
+// ============================================================
 
-// 按钮
+// --- 按钮 ---
 .el-button {
   font-family: $font-serif;
-  border-radius: 0;  // 直角
+  border-radius: 0;
   transition: all $transition-fast;
+  letter-spacing: 0.05em;
 
-  &--primary {
-    @include neon-button($neon-cyan);
-  }
-
-  &--success {
-    @include neon-button($status-green);
-  }
-
-  &--warning {
-    @include neon-button($neon-magenta);
-  }
-
-  &--danger {
-    @include neon-button($status-red);
-  }
+  &--primary { @include neon-button($neon-cyan); }
+  &--success { @include neon-button($status-green); }
+  &--warning { @include neon-button($neon-magenta); }
+  &--danger  { @include neon-button($status-red); }
 
   &--default {
     font-family: $font-serif;
     background: transparent;
-    border: 1px solid $border-color;
-    color: $text-primary;
+    border: 1px solid $neon-cyan-dim;
+    color: $text-secondary;
 
-    &:hover,
-    &:focus {
+    &:hover, &:focus {
       border-color: $neon-cyan;
       color: $neon-cyan;
-      box-shadow: 0 0 10px rgba($neon-cyan, 0.3);
+      box-shadow: 0 0 12px rgba($neon-cyan, 0.35);
     }
   }
 }
 
-// 输入框
-.el-input {
-  &__wrapper {
-    background-color: rgba(0, 20, 40, 0.6);
-    border: 1px solid $neon-cyan-dim;
-    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3);
-    border-radius: 0;
+// --- 输入框 ---
+.el-input__wrapper {
+  background-color: rgba(2, 5, 16, 0.7);
+  border: 1px solid $neon-cyan-dim;
+  box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.4);
+  border-radius: 0;
 
-    &:hover,
-    &.is-focus {
-      border-color: $neon-cyan;
-      box-shadow:
-        0 0 15px rgba($neon-cyan, 0.3),
-        inset 0 0 10px rgba(0, 0, 0, 0.3);
-    }
+  &:hover, &.is-focus {
+    border-color: $neon-cyan;
+    box-shadow:
+      0 0 15px rgba($neon-cyan, 0.35),
+      inset 0 0 15px rgba(0, 0, 0, 0.4);
   }
+}
+.el-input__inner {
+  font-family: $font-sans;
+  color: $text-primary;
+  &::placeholder { color: $text-disabled; }
+}
 
-  &__inner {
-    font-family: $font-sans;
-    color: $text-primary;
-
-    &::placeholder {
-      color: $text-disabled;
-    }
+// --- 文本域 ---
+.el-textarea__inner {
+  font-family: $font-sans;
+  background-color: rgba(2, 5, 16, 0.7);
+  border: 1px solid $neon-cyan-dim;
+  border-radius: 0;
+  color: $text-primary;
+  &:focus {
+    border-color: $neon-cyan;
+    box-shadow: 0 0 18px rgba($neon-cyan, 0.35);
   }
 }
 
-// 文本域
-.el-textarea {
-  &__inner {
-    font-family: $font-sans;
-    background-color: rgba(0, 20, 40, 0.6);
-    border: 1px solid $neon-cyan-dim;
-    border-radius: 0;
-    color: $text-primary;
-
-    &:focus {
-      border-color: $neon-cyan;
-      box-shadow: 0 0 15px rgba($neon-cyan, 0.3);
-    }
-  }
-}
-
-// 表格
+// --- 表格 ---
 .el-table {
   background-color: transparent;
   color: $text-primary;
 
   th.el-table__cell {
     font-family: $font-serif;
-    background-color: rgba(0, 168, 181, 0.15);
+    background-color: rgba($neon-cyan-dim, 0.12);
     color: $neon-cyan;
-    text-shadow: 0 0 5px rgba($neon-cyan, 0.4);
+    text-shadow: 0 0 6px rgba($neon-cyan, 0.45);
     border-bottom-color: $border-color;
+    letter-spacing: 0.05em;
   }
 
   td.el-table__cell {
     font-family: $font-sans;
-    border-bottom-color: rgba($border-color, 0.5);
+    border-bottom-color: rgba($border-color, 0.4);
   }
 
   tr {
     background-color: transparent;
-
-    &:hover > td.el-table__cell {
-      background-color: $bg-tertiary;
-    }
-  }
-
-  &__row--striped td.el-table__cell {
-    background-color: rgba($bg-tertiary, 0.5);
+    &:hover > td.el-table__cell { background-color: $bg-tertiary; }
   }
 }
 
-// 卡片
+// --- 卡片 ---
 .el-card {
   background: $bg-overlay;
-  @include neon-border($neon-cyan-dim);
+  @include corner-brackets($neon-cyan, 10px, 1px);
+  border: 1px solid $neon-cyan-dim;
+  box-shadow:
+    0 0 8px rgba($neon-cyan, 0.2),
+    inset 0 0 8px rgba($neon-cyan, 0.04);
   backdrop-filter: blur(12px);
   transition: all $transition-fast;
 
   &:hover {
-    @include neon-border($neon-cyan);
+    border-color: $neon-cyan;
+    box-shadow:
+      0 0 16px rgba($neon-cyan, 0.35),
+      inset 0 0 12px rgba($neon-cyan, 0.08);
   }
 
   &__header {
@@ -232,96 +229,76 @@ a {
     border-bottom: 1px solid $border-color;
     padding: $spacing-md;
   }
-
-  &__body {
-    font-family: $font-sans;
-  }
 }
 
-// 对话框
+// --- 对话框 ---
 .el-dialog {
   background-color: $bg-secondary;
   border: 1px solid $neon-cyan-dim;
-  @include neon-border($neon-cyan-dim);
   border-radius: 0;
+  box-shadow:
+    0 0 30px rgba(0, 255, 255, 0.2),
+    0 0 60px rgba(0, 255, 255, 0.08);
+  @include corner-brackets-all($neon-cyan, 12px, 1px);
 
   &__header {
     font-family: $font-serif;
     border-bottom: 1px solid $border-color;
   }
 
-  &__title {
-    @include neon-text($neon-cyan);
-  }
-
-  &__body {
-    font-family: $font-sans;
-  }
+  &__title { @include neon-text($neon-cyan); }
 }
 
-// 消息提示
-.el-message {
+// --- 消息/通知 ---
+.el-message, .el-notification {
   background-color: $bg-secondary;
   border: 1px solid $neon-cyan-dim;
   border-radius: 0;
-  @include neon-border($neon-cyan-dim);
+  box-shadow: 0 0 12px rgba($neon-cyan, 0.2);
 }
 
-// 通知
-.el-notification {
-  background-color: $bg-secondary;
-  border: 1px solid $neon-cyan-dim;
-  border-radius: 0;
-}
-
-// 标签
+// --- 标签 ---
 .el-tag {
   font-family: $font-serif;
-  border-radius: 0;  // 直角
+  border-radius: 0;
+  letter-spacing: 0.04em;
 
   &--success {
-    background: rgba($status-green, 0.15);
+    background: rgba($status-green, 0.12);
     border-color: $status-green;
     color: $status-green;
-    text-shadow: 0 0 8px rgba($status-green, 0.5);
+    text-shadow: 0 0 6px rgba($status-green, 0.5);
   }
-
   &--warning {
-    background: rgba($neon-magenta, 0.15);
+    background: rgba($neon-magenta, 0.12);
     border-color: $neon-magenta;
     color: $neon-magenta;
-    text-shadow: 0 0 8px rgba($neon-magenta, 0.5);
+    text-shadow: 0 0 6px rgba($neon-magenta, 0.5);
   }
-
   &--danger {
-    background: rgba($status-red, 0.15);
+    background: rgba($status-red, 0.12);
     border-color: $status-red;
     color: $status-red;
-    text-shadow: 0 0 8px rgba($status-red, 0.5);
+    text-shadow: 0 0 6px rgba($status-red, 0.5);
   }
-
   &--info {
-    background: rgba($neon-cyan, 0.15);
+    background: rgba($neon-cyan, 0.12);
     border-color: $neon-cyan-dim;
     color: $neon-cyan;
-    text-shadow: 0 0 8px rgba($neon-cyan, 0.5);
+    text-shadow: 0 0 6px rgba($neon-cyan, 0.5);
   }
 }
 
-// 下拉菜单
+// --- 下拉菜单 ---
 .el-dropdown-menu {
   background-color: $bg-secondary;
   border: 1px solid $neon-cyan-dim;
   border-radius: 0;
-  @include neon-border($neon-cyan-dim);
+  box-shadow: 0 0 16px rgba($neon-cyan, 0.25);
 
   &__item {
     font-family: $font-sans;
     color: $text-primary;
-
-    &:hover {
-      background-color: $bg-tertiary;
-      color: $neon-cyan;
-    }
+    &:hover { background-color: $bg-tertiary; color: $neon-cyan; }
   }
 }
