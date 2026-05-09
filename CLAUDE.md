@@ -18,11 +18,12 @@
 
 ### 后端
 - **框架**: FastAPI (Python 3.11+)
+- **智能体框架**: deepagents (LangGraph) + Skill
 - **ORM**: SQLAlchemy 2.0 (async)
 - **任务队列**: Celery + Redis
 - **数据库**: PostgreSQL 15
 - **缓存**: Redis
-- **通信协议**: REST API + WebSocket (实时状态推送)
+- **通信协议**: REST API + WebSocket (实时状态推送) + ACP/Agent Protocol (外部智能体)
 - **模型推理**: PyTorch / ONNX Runtime
 - **依赖管理**: uv
 
@@ -61,6 +62,8 @@ dependencies = [
     "websockets>=12.0",
     "httpx>=0.27",
     "pydantic-settings>=2.3",
+    "deepagents>=0.1",
+    "langgraph>=0.2",
 ]
 ```
 
@@ -118,14 +121,24 @@ MechGen/
 │
 ├── backend/                     # FastAPI 后端
 │   ├── app/
-│   │   ├── api/                 # API 路由
-│   │   │   ├── v1/
-│   │   │   └── deps.py
+│   │   ├── agents/              # 智能体层 (deepagents)
+│   │   │   ├── registry.py      # 智能体注册表 + 路由中间件
+│   │   │   ├── event_bus.py     # 事件总线 (状态广播)
+│   │   │   ├── optimization/    # 模型优化模块 (agents/ + skills/)
+│   │   │   ├── collision/       # 模型碰撞模块 (agents/ + skills/)
+│   │   │   ├── retrieval/       # 模型检索模块 (agents/ + skills/)
+│   │   │   └── evaluation/      # 模型评估模块 (agents/ + skills/)
+│   │   ├── external_agents/     # 外部智能体 (适配器 + 配置)
+│   │   │   ├── adapters/        # ACP / Agent Protocol 适配器
+│   │   │   ├── registry.py      # 外部智能体注册
+│   │   │   └── configs/         # 外部智能体 YAML 配置
+│   │   ├── skills/              # 全局共享 skills
+│   │   ├── modules/             # 业务模块 (传统后端，内聚结构)
+│   │   │   ├── optimization/    # api.py + service.py + schema.py + model.py
+│   │   │   ├── collision/
+│   │   │   ├── retrieval/
+│   │   │   └── evaluation/
 │   │   ├── core/                # 核心配置
-│   │   ├── models/              # SQLAlchemy 模型
-│   │   ├── schemas/             # Pydantic 校验
-│   │   ├── services/            # 业务逻辑
-│   │   ├── agents/              # 智能体实现
 │   │   ├── workers/             # Celery 异步任务
 │   │   └── main.py
 │   ├── alembic/
@@ -160,8 +173,10 @@ MechGen/
 
 ### 后端
 - API 路由: 版本化前缀 `/api/v1/`,RESTful 风格
-- 服务层: 业务逻辑集中在 `services/`,路由层只做参数校验和响应格式化
-- 智能体: 每个智能体独立模块,通过事件总线通信,遵循统一消息协议
+- 模块内聚: 每个业务模块(api/service/schema/model)在 `modules/` 下独立目录
+- 智能体: 基于 deepagents 框架,通过注册表动态路由,支持本地+外部智能体
+- 智能体通信: 去中心化编排(SubAgent 请求-响应) + 事件总线(状态广播补充)
+- Skills: 每个模块有独立 skills 目录,全局 skills 放 `skills/` 根目录
 - 数据库: 所有表包含 `id`, `created_at`, `updated_at` 字段
 
 ## 构建与运行
