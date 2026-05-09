@@ -1,0 +1,556 @@
+# 多智能体协同后端架构设计
+
+## 概述
+
+基于 deepagents 框架重构后端智能体架构，采用多智能体协同方式工作。本地智能体使用 deepagents 框架 + skill 方式运行，支持接入外部智能体。后端按业务域拆分为4个内聚模块，每个模块包含传统后端能力（API/Service）和智能体层，智能体通过问答驱动后端 API，后端本身也可独立使用。
+
+### 核心决策
+
+| 决策项 | 选择 | 理由 |
+|--------|------|------|
+| 智能体框架 | deepagents (LangGraph) | 统一的中间件栈、skill 系统、子智能体调用 |
+| 模块划分 | 按业务域：优化/碰撞/检索/评估 | 职责清晰，内聚性高 |
+| 模块内智能体组织 | 松散容器，智能体平等协作 | 灵活组合，按需编排 |
+| 编排模式 | 去中心化，通过注册表动态路由 | 模块解耦，支持动态扩展 |
+| 事件总线 | 保留，作为状态广播补充 | deepagents 是请求-响应模式，广播需求独立满足 |
+| 外部智能体接入 | 混合模式（ACP + Agent Protocol） | ACP 用于对话式服务，Agent Protocol 用于任务式执行 |
+| LLM 模型配置 | 统一模型，全局配置 | 简化运维，降低复杂度 |
+| 模块物理边界 | 内聚结构（API/Service/Schema/Model 在同一目录） | 模块独立性，便于维护和扩展 |
+
+## 1. 目录结构
+
+```
+backend/app/
+├── agents/                              # 智能体根目录
+│   ├── __init__.py
+│   ├── registry.py                      # 智能体注册表 + 路由中间件
+│   ├── event_bus.py                     # 事件总线（状态广播补充）
+│   │
+│   ├── optimization/                    # 模块1：模型优化
+│   │   ├── __init__.py
+│   │   ├── agents/                      # 智能体层
+│   │   │   ├── __init__.py
+│   │   │   ├── optimizer.py             # 优化编排智能体
+│   │   │   ├── trainer.py               # 训练执行智能体
+│   │   │   └── converter.py             # 模型转换智能体
+│   │   └── skills/                      # 领域技能
+│   │       ├── hyperparameter-search/SKILL.md
+│   │       ├── distributed-training/SKILL.md
+│   │       └── model-conversion/SKILL.md
+│   │
+│   ├── collision/                       # 模块2：模型碰撞
+│   │   ├── __init__.py
+│   │   ├── agents/
+│   │   │   ├── __init__.py
+│   │   │   ├── collision_coordinator.py # 碰撞编排智能体
+│   │   │   ├── inference_runner.py      # 推理执行智能体
+│   │   │   └── rule_extractor.py        # 规则提取智能体
+│   │   └── skills/
+│   │       ├── multi-model-inference/SKILL.md
+│   │       ├── result-fusion/SKILL.md
+│   │       └── rule-extraction/SKILL.md
+│   │
+│   ├── retrieval/                       # 模块3：模型检索
+│   │   ├── __init__.py
+│   │   ├── agents/
+│   │   │   ├── __init__.py
+│   │   │   ├── semantic_searcher.py     # 语义搜索智能体
+│   │   │   └── match_evaluator.py       # 匹配评估智能体
+│   │   └── skills/
+│   │       ├── semantic-search/SKILL.md
+│   │       └── match-evaluation/SKILL.md
+│   │
+│   └── evaluation/                      # 模块4：模型评估
+│       ├── __init__.py
+│       ├── agents/
+│       │   ├── __init__.py
+│       │   ├── metrics_analyzer.py      # 指标分析智能体
+│       │   └── report_generator.py      # 报告生成智能体
+│       └── skills/
+│           ├── multi-dimensional-eval/SKILL.md
+│           └── report-generation/SKILL.md
+│
+├── external_agents/                     # 外部智能体（独立目录）
+│   ├── __init__.py
+│   ├── adapters/                        # 协议适配器
+│   │   ├── __init__.py
+│   │   ├── acp_adapter.py              # ACP 适配器
+│   │   └── agent_protocol_adapter.py   # Agent Protocol 适配器
+│   ├── registry.py                      # 外部智能体注册（URL/凭证/元数据）
+│   └── configs/                         # 外部智能体配置文件
+│       └── example_external.yaml
+│
+├── skills/                              # 全局共享 skills（跨模块通用）
+│   ├── task-status-query/SKILL.md
+│   └── asset-lookup/SKILL.md
+│
+├── modules/                             # 业务模块（传统后端，内聚结构）
+│   ├── optimization/
+│   │   ├── __init__.py
+│   │   ├── api.py                       # 路由
+│   │   ├── service.py                   # 业务逻辑
+│   │   ├── schema.py                    # Pydantic 校验
+│   │   └── model.py                     # SQLAlchemy 模型
+│   │
+│   ├── collision/
+│   │   ├── __init__.py
+│   │   ├── api.py
+│   │   ├── service.py
+│   │   ├── schema.py
+│   │   └── model.py
+│   │
+│   ├── retrieval/
+│   │   ├── __init__.py
+│   │   ├── api.py
+│   │   ├── service.py
+│   │   ├── schema.py
+│   │   └── model.py
+│   │
+│   └── evaluation/
+│       ├── __init__.py
+│       ├── api.py
+│       ├── service.py
+│       ├── schema.py
+│       └── model.py
+│
+├── core/                                # 全局配置
+│   ├── __init__.py
+│   ├── config.py
+│   ├── security.py
+│   └── database.py
+│
+├── main.py                              # FastAPI 入口，聚合各模块路由
+└── workers/                             # Celery 异步任务
+    ├── __init__.py
+    ├── inference.py
+    └── training.py
+```
+
+### 调用路径
+
+```
+前端直接调用 → modules/xxx/api.py → modules/xxx/service.py
+问答驱动    → agents/xxx/ → (skill → execute) → modules/xxx/service.py
+外部智能体  → external_agents/adapters/ → modules/xxx/service.py
+```
+
+## 2. 智能体注册表与通信机制
+
+### 2.1 智能体注册表
+
+每个智能体启动时自注册，运行时通过路由中间件动态解析目标。
+
+```python
+# agents/registry.py
+
+@dataclass
+class AgentEntry:
+    name: str                           # 全局唯一标识，如 "optimization.trainer"
+    module: str                         # 所属模块：optimization / collision / retrieval / evaluation
+    agent: CompiledStateGraph           # 编译后的 deep agent 实例
+    description: str                    # 能力描述，用于路由匹配
+    skills: list[str]                   # 关联的 skill 名称
+    is_external: bool = False           # 是否外部智能体
+    protocol: str | None = None         # 外部协议：acp / agent_protocol
+    url: str | None = None              # 外部端点
+
+
+class AgentRegistry:
+    """智能体注册表 — 运行时动态发现与路由"""
+
+    _agents: dict[str, AgentEntry]      # name → entry
+
+    def register(self, entry: AgentEntry) -> None: ...
+    def unregister(self, name: str) -> None: ...
+    def resolve(self, name: str) -> AgentEntry: ...
+    def list_by_module(self, module: str) -> list[AgentEntry]: ...
+    def list_all(self) -> list[AgentEntry]: ...
+```
+
+### 2.2 路由中间件
+
+自定义 deepagents 中间件，拦截 `task` 工具调用，将 SubAgent 声明动态路由到注册表中的实际智能体。
+
+```python
+# agents/registry.py（续）
+
+class RegistryRoutingMiddleware(AgentMiddleware):
+    """注册表路由中间件 — 将 SubAgent task 调用路由到注册表智能体"""
+
+    def __init__(self, registry: AgentRegistry, ext_registry: ExternalAgentRegistry):
+        self.registry = registry
+        self.ext_registry = ext_registry
+
+    def wrap_tool_call(self, request, handler):
+        # 拦截 task 工具调用，解析目标智能体名
+        # 从注册表获取 AgentEntry
+        # 本地智能体 → 直接 invoke
+        # 外部智能体 → 走对应 adapter
+        ...
+```
+
+### 2.3 智能体声明方式
+
+每个智能体声明自己可调用的协作智能体，只声明接口不绑定实现，运行时由注册表解析。
+
+```python
+# agents/optimization/agents/optimizer.py
+
+optimizer = create_deep_agent(
+    model=MODEL,
+    tools=[...],
+    subagents=[
+        SubAgent(name="optimization.trainer", description="执行模型训练"),
+        SubAgent(name="optimization.converter", description="执行模型格式转换"),
+        SubAgent(name="retrieval.semantic_searcher", description="语义检索模型资产"),
+    ],
+    skills=["hyperparameter-search", "distributed-training"],
+    middleware=[RegistryRoutingMiddleware(registry)],
+)
+```
+
+### 2.4 事件总线
+
+事件总线不参与智能体间的请求-响应调用，仅用于状态广播，让各模块感知全局进展。
+
+```python
+# agents/event_bus.py
+
+@dataclass
+class AgentEvent:
+    source: str              # 发送方智能体名
+    module: str              # 所属模块
+    event_type: str          # task_started / task_progress / task_completed / task_failed
+    task_id: str
+    payload: dict            # 事件数据
+    timestamp: datetime
+
+
+class EventBus:
+    """事件总线 — 模块间状态广播（非请求-响应）"""
+
+    _subscribers: dict[str, list[Callable]]   # event_type → handlers
+
+    def publish(self, event: AgentEvent) -> None: ...
+    def subscribe(self, event_type: str, handler: Callable) -> None: ...
+    def unsubscribe(self, event_type: str, handler: Callable) -> None: ...
+```
+
+**使用场景**：
+- 训练进度广播 → 评估模块可提前准备评估资源
+- 碰撞完成广播 → 优化模块可获取碰撞反馈
+- 全局状态 → 前端 WebSocket 推送
+
+**与 deepagents 调用的关系**：
+```
+请求-响应（deepagents SubAgent）:  智能体A → task → 智能体B → 结果返回A
+状态广播（EventBus）:              智能体A → publish → 所有订阅者收到通知
+```
+
+## 3. 外部智能体接入
+
+### 3.1 架构
+
+外部智能体通过适配器层接入，对注册表透明——本地智能体调用外部智能体和调用本地智能体的方式完全相同（都是 `task` 工具）。
+
+```
+本地智能体A → task("external.llm_analyzer") → 注册表
+                                                │
+                                                ▼ 是外部智能体
+                                        external_agents/registry.py
+                                                │
+                                    ┌───────────┴───────────┐
+                                    ▼                       ▼
+                              ACP 适配器              Agent Protocol 适配器
+                                    │                       │
+                                    ▼                       ▼
+                              外部 ACP 服务            远程 Agent Protocol 服务
+```
+
+### 3.2 外部智能体注册表
+
+```python
+# external_agents/registry.py
+
+@dataclass
+class ExternalAgentConfig:
+    name: str                           # 注册到全局注册表的名称，如 "external.llm_analyzer"
+    protocol: Literal["acp", "agent_protocol"]
+    url: str                            # 服务端点
+    headers: dict[str, str] | None      # 认证头
+    description: str                    # 能力描述
+    skills: list[str]                   # 暴露的技能标签
+    health_check_interval: int = 60     # 健康检查间隔(秒)
+    timeout: int = 300                  # 调用超时(秒)
+
+
+class ExternalAgentRegistry:
+    """外部智能体注册 — 管理 URL/凭证/健康状态"""
+
+    _configs: dict[str, ExternalAgentConfig]
+    _health_status: dict[str, bool]     # name → 是否在线
+
+    def register(self, config: ExternalAgentConfig) -> None: ...
+    def unregister(self, name: str) -> None: ...
+    def get_config(self, name: str) -> ExternalAgentConfig: ...
+    def is_healthy(self, name: str) -> bool: ...
+    async def health_check(self) -> None: ...     # 定期探测
+```
+
+### 3.3 适配器
+
+```python
+# external_agents/adapters/acp_adapter.py
+
+class ACPAdapter:
+    """ACP 协议适配器 — 将 ACP 服务包装为可调用的 deep agent 接口"""
+
+    async def invoke(self, config: ExternalAgentConfig, messages: list) -> dict:
+        # 1. 建立 ACP 会话
+        # 2. 发送 prompt
+        # 3. 收集流式响应
+        # 4. 返回结构化结果（与本地智能体返回格式对齐）
+        ...
+
+
+# external_agents/adapters/agent_protocol_adapter.py
+
+class AgentProtocolAdapter:
+    """Agent Protocol 适配器 — 对接 deepagents 原生 AsyncSubAgent 模式"""
+
+    async def invoke(self, config: ExternalAgentConfig, messages: list) -> dict:
+        # 1. 通过 LangGraph SDK 创建远程线程
+        # 2. 发送消息并等待结果
+        # 3. 返回结构化结果
+        ...
+
+    async def start_async(self, config: ExternalAgentConfig, messages: list) -> str:
+        # 异步模式：返回 task_id，不阻塞
+        ...
+
+    async def check_async(self, task_id: str) -> dict | None:
+        # 查询异步任务状态
+        ...
+```
+
+### 3.4 配置文件格式
+
+```yaml
+# external_agents/configs/example_external.yaml
+
+agents:
+  - name: external.llm_analyzer
+    protocol: acp
+    url: "https://llm-service.internal:8443/acp"
+    headers:
+      Authorization: "Bearer ${LLM_SERVICE_TOKEN}"
+    description: "大模型推理分析服务，支持多模态输入"
+    skills: ["llm-inference", "multi-modal-analysis"]
+    timeout: 300
+
+  - name: external.gpu_cluster
+    protocol: agent_protocol
+    url: "https://gpu-cluster.internal:8001"
+    headers:
+      X-API-Key: "${GPU_CLUSTER_KEY}"
+    description: "GPU 集群训练服务，支持分布式模型训练"
+    skills: ["distributed-training", "gpu-inference"]
+    timeout: 600
+    health_check_interval: 30
+```
+
+### 3.5 启动流程
+
+```python
+# main.py 中的初始化
+
+async def startup():
+    # 1. 初始化全局注册表
+    registry = AgentRegistry()
+
+    # 2. 加载本地智能体，自注册
+    #    每个模块的 __init__.py 导出 AGENTS 列表，启动时自动扫描导入
+    for module in ["optimization", "collision", "retrieval", "evaluation"]:
+        module_pkg = importlib.import_module(f"agents.{module}")
+        for agent in module_pkg.AGENTS:
+            registry.register(agent)
+
+    # 3. 加载外部智能体配置，注册到全局注册表
+    ext_registry = ExternalAgentRegistry()
+    for config in load_external_configs("external_agents/configs/"):
+        ext_registry.register(config)
+        # 包装为 AgentEntry，标记 is_external=True
+        registry.register(AgentEntry(
+            name=config.name,
+            module="external",
+            agent=None,                # 无本地 agent 实例
+            description=config.description,
+            skills=config.skills,
+            is_external=True,
+            protocol=config.protocol,
+            url=config.url,
+        ))
+
+    # 4. 启动健康检查
+    asyncio.create_task(ext_registry.health_check_loop())
+
+    # 5. 将注册表注入路由中间件
+    routing_middleware = RegistryRoutingMiddleware(registry, ext_registry)
+```
+
+## 4. 四个业务模块详细设计
+
+### 4.1 模块1：模型检索（retrieval）
+
+最基础的模块，其他模块都可能需要检索能力。
+
+**后端（`modules/retrieval/`）**：
+
+| 文件 | 职责 |
+|------|------|
+| `api.py` | `/api/v1/retrieval/search`、`/api/v1/retrieval/models/{id}`、`/api/v1/retrieval/match` |
+| `service.py` | 语义搜索、匹配度评估、模型推荐理由生成、不满足分析 |
+| `schema.py` | SearchRequest、SearchResult、MatchEvaluation、Recommendation |
+| `model.py` | ModelAsset 表（三维分类：侦测阶段/模型形态/成熟度等级） |
+
+**智能体（`agents/retrieval/`）**：
+
+| 智能体 | 职责 | 调用的 service | 协作智能体 |
+|--------|------|---------------|-----------|
+| `semantic_searcher` | 语义搜索模型资产，生成候选列表 | `retrieval.search` | — |
+| `match_evaluator` | 评估匹配度，生成推荐理由和不满足分析 | `retrieval.match` | `semantic_searcher` |
+
+**Skills**：
+
+| Skill | 说明 |
+|-------|------|
+| `semantic-search` | 构建搜索查询，调用检索API，排序筛选结果 |
+| `match-evaluation` | 评估模型与场景的匹配度，生成推荐理由 |
+
+### 4.2 模块2：模型优化（optimization）
+
+**后端（`modules/optimization/`）**：
+
+| 文件 | 职责 |
+|------|------|
+| `api.py` | `/api/v1/optimization/tasks`、`/api/v1/optimization/config`、`/api/v1/optimization/start`、`/api/v1/optimization/status/{id}` |
+| `service.py` | 超参搜索、训练任务管理、模型转换、训练状态追踪 |
+| `schema.py` | OptimizationTask、TrainingConfig、OptimizationResult、TrainingStatus |
+| `model.py` | OptimizationTask 表、TrainingLog 表 |
+
+**智能体（`agents/optimization/`）**：
+
+| 智能体 | 职责 | 调用的 service | 协作智能体 |
+|--------|------|---------------|-----------|
+| `optimizer` | 优化编排——分析场景需求，制定优化方案 | `optimization.config` | `retrieval.semantic_searcher`、`trainer`、`converter` |
+| `trainer` | 执行模型训练，监控训练过程 | `optimization.start`、`optimization.status` | — |
+| `converter` | 模型格式转换（PyTorch→ONNX等） | `optimization.convert` | — |
+
+**Skills**：
+
+| Skill | 说明 |
+|-------|------|
+| `hyperparameter-search` | 根据场景和约束推荐超参搜索空间 |
+| `distributed-training` | 配置和启动分布式训练任务 |
+| `model-conversion` | 执行模型格式转换和验证 |
+
+### 4.3 模块3：模型碰撞（collision）
+
+**后端（`modules/collision/`）**：
+
+| 文件 | 职责 |
+|------|------|
+| `api.py` | `/api/v1/collision/run`、`/api/v1/collision/rules`、`/api/v1/collision/history` |
+| `service.py` | 多模型推理调度、结果融合、规则提取沉淀、碰撞历史管理 |
+| `schema.py` | CollisionTask、CollisionResult、CollisionRule、RuleDeposition |
+| `model.py` | CollisionTask 表、CollisionRule 表 |
+
+**智能体（`agents/collision/`）**：
+
+| 智能体 | 职责 | 调用的 service | 协作智能体 |
+|--------|------|---------------|-----------|
+| `collision_coordinator` | 碰撞编排——选择模型组合，制定碰撞策略 | `collision.run` | `inference_runner`、`rule_extractor`、`evaluation.metrics_analyzer` |
+| `inference_runner` | 执行多模型联合推理，管理推理资源 | `collision.inference` | — |
+| `rule_extractor` | 从碰撞结果中提取结构化规则，沉淀入库 | `collision.rules`、`collision.deposit` | — |
+
+**Skills**：
+
+| Skill | 说明 |
+|-------|------|
+| `multi-model-inference` | 编排多模型推理流程，管理推理依赖 |
+| `result-fusion` | 融合多模型推理结果，处理冲突和置信度 |
+| `rule-extraction` | 从碰撞发现中提取结构化规则，关联场景标签 |
+
+### 4.4 模块4：模型评估（evaluation）
+
+**后端（`modules/evaluation/`）**：
+
+| 文件 | 职责 |
+|------|------|
+| `api.py` | `/api/v1/evaluation/metrics`、`/api/v1/evaluation/compare`、`/api/v1/evaluation/reports` |
+| `service.py` | 多维度评估指标计算、模型对比分析、报告生成 |
+| `schema.py` | EvaluationTask、MetricsResult、ComparisonReport、RadarChartData |
+| `model.py` | EvaluationTask 表、EvaluationReport 表 |
+
+**智能体（`agents/evaluation/`）**：
+
+| 智能体 | 职责 | 调用的 service | 协作智能体 |
+|--------|------|---------------|-----------|
+| `metrics_analyzer` | 多维度指标计算（准确率、延迟、鲁棒性等），生成雷达图数据 | `evaluation.metrics` | — |
+| `report_generator` | 生成评估报告，支持横向对比和趋势分析 | `evaluation.compare`、`evaluation.reports` | `metrics_analyzer` |
+
+**Skills**：
+
+| Skill | 说明 |
+|-------|------|
+| `multi-dimensional-eval` | 设计评估维度，执行评估流程 |
+| `report-generation` | 生成结构化评估报告和对比分析 |
+
+### 4.5 模块间协作典型路径
+
+```
+用户: "对同行人识别模型进行优化并碰撞"
+
+retrieval.semantic_searcher    → 检索"同行人识别"相关模型
+        │
+        ▼
+optimization.optimizer         → 制定优化方案
+        │
+        ├──→ optimization.trainer   → 执行训练 (publish: task_progress)
+        │
+        └──→ optimization.converter → 模型转换
+                │
+                ▼
+collision.collision_coordinator → 制定碰撞策略
+        │
+        ├──→ collision.inference_runner  → 执行碰撞推理
+        │
+        ├──→ collision.rule_extractor   → 提取碰撞规则
+        │
+        └──→ evaluation.metrics_analyzer → 评估碰撞产物
+                │
+                ▼
+        evaluation.report_generator  → 生成评估报告
+```
+
+## 5. 与现有架构的映射
+
+### 原架构 → 新架构 对照
+
+| 原架构组件 | 新架构位置 | 变化说明 |
+|-----------|-----------|---------|
+| 接入层 (可视化交互/问答) | 前端不变，后端 `modules/*/api.py` | API 路径不变，新增智能体驱动路径 |
+| 统一任务网关 | `agents/registry.py` + `modules/*/service.py` | 注册表替代网关，service 层承载业务逻辑 |
+| 智能体协同引擎 (事件总线) | `agents/registry.py` + `agents/event_bus.py` | 注册表负责请求路由，事件总线保留作广播 |
+| 模型优化统筹智能体 | `agents/optimization/agents/optimizer.py` | 拆分为 optimizer + trainer + converter |
+| 模型检索问答智能体 | `agents/retrieval/agents/semantic_searcher.py` + `match_evaluator.py` | 拆分为 searcher + evaluator |
+| 数据集构建智能体 | `agents/optimization/skills/distributed-training/` | 降级为 skill，由 trainer 智能体调度 |
+| 模型优化智能体集 | `agents/optimization/agents/trainer.py` + `converter.py` | 拆分为独立智能体 |
+| 验证智能体 | `agents/evaluation/skills/multi-dimensional-eval/` | 降级为 skill，由 metrics_analyzer 调度 |
+| 评估体系智能体 | `agents/evaluation/agents/metrics_analyzer.py` + `report_generator.py` | 拆分为 analyzer + generator |
+| 模型碰撞统筹智能体 | `agents/collision/agents/collision_coordinator.py` | 拆分为 coordinator + runner + extractor |
+| 模型资产层 | `modules/*/model.py` | 内聚到各模块 |
+
+---
+
+*本文档为多智能体协同后端架构的设计规范，后续实现将基于本文档制定详细实施计划。*
